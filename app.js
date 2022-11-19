@@ -54,8 +54,6 @@ const downwnloadRecordingFiles = async () => {
 
       // ============= condition to stop loop =============
       if (index + 1 === dataLength) {
-        console.log("masuk condition end loop");
-
         // create files index at recording files
         fs.writeFileSync(
           "./recording/" + folderName + "/" + data.cursor + ".json",
@@ -100,11 +98,11 @@ const downwnloadRecordingFiles = async () => {
 
 const getRecordingList = async () => {
   // last cursor stored here in case the application crash so you can continue from the last cursor
-  const data = require("./history.json");
+  let data = JSON.parse(fs.readFileSync("./history.json"));
 
   // get recording list
   const recordingListUrl = `${Domain}/_o/v3/callRecordingEvent/${data.cursor}`;
-
+  console.log(recordingListUrl, "urlnya ");
   // make folder for recording files
   fs.mkdirSync(
     "./recording/" + folderName,
@@ -128,7 +126,6 @@ const getRecordingList = async () => {
     .catch((error) => {
       console.log(error);
     });
-
   return GetRecordingList;
 };
 
