@@ -40,13 +40,16 @@ const downwnloadRecordingFiles = async () => {
       };
 
       const saveFile = await downloadFile(details);
-      if (saveFile.status === 200 && saveFile.data) {
-        console.log("\x1b[32m%s\x1b[0m", `Downloading Success`);
-        // console.log(saveFile);
+
+      if (saveFile) {
+        console.log(
+          "\x1b[32m%s\x1b[0m",
+          `File has been downloaded successfully`
+        );
         data.index += 1;
         fs.writeFileSync("history.json", JSON.stringify(data));
       } else {
-        console.log("\x1b[32m%s\x1b[0m", `Failed to get file retrying ...`);
+        console.log("\x1b[31m%s\x1b[0m", `Failed to get file retrying ...`);
       }
 
       // ============= condition to stop loop =============
@@ -130,7 +133,19 @@ const getRecordingList = async () => {
 };
 
 const downloadFile = async (details) => {
+  let result = false;
   try {
+    console.log(
+      "\x1b[33m%s\x1b[0m",
+      `${details.index + 1}/${details.dataLength} - From cursor [${
+        details.data.cursor
+      }]`
+    );
+    console.log(
+      "\x1b[32m%s\x1b[0m",
+      `Downloading ${details.fileName[details.fileName.length - 1]}`
+    );
+
     const downloadFile = await axios.get(details.recordingDownloadUrl, {
       responseType: "stream",
       params: {
@@ -145,18 +160,21 @@ const downloadFile = async (details) => {
           details.fileName[details.fileName.length - 1]
       )
     );
-    console.log(
-      "\x1b[33m%s\x1b[0m",
-      `${details.index + 1}/${details.dataLength} - From cursor [${
-        details.data.cursor
-      }]`
-    );
-    console.log(
-      "\x1b[32m%s\x1b[0m",
-      `Downloading ${details.fileName[details.fileName.length - 1]}`
-    );
 
-    return downloadFile;
+    await new Promise((resolve, reject) => {
+      saveFile
+        .on("finish", () => {
+          console.log("\x1b[34m%s\x1b[0m", `File Saved ..`);
+          result = true;
+          resolve();
+        })
+        .on("error", (err) => {
+          result = false;
+          console.log(err, "ini erornya");
+          reject(err);
+        });
+    });
+    return result;
   } catch (error) {
     console.log(error);
   }
