@@ -1,0 +1,2 @@
+command to store file list on folder into .txt file
+printf '%s\n' * > filelist.txt

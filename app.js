@@ -21,15 +21,11 @@ const downwnloadRecordingFiles = async () => {
   nIntervId = setInterval(async () => {
     if (recordingDataList.data.data && recordingDataList.data.data.length > 0) {
       // last cursor stored here in case the application crash so you can continue from the last cursor
-      let data = require("./history.json");
+      let data = JSON.parse(fs.readFileSync("./history.json"));
       let index = data.index;
       let recordingDetail = recordingDataList.data.data[index];
       let dataLength = recordingDataList.data.data.length;
-      if (recordingDetail.fileKey === undefined) {
-        console.log(recordingDetail, "recording detailsnya");
-        console.log(recordingDataList, "recording datalistnya");
-        console.log(index, "indexnya");
-      }
+
       // downloading every recording files from recording list acquired
       const recordingDownloadUrl = `${Domain}/_o/v2/files/${recordingDetail.fileKey}`;
       const fileName = recordingDetail.fileKey.split("/");
@@ -43,10 +39,10 @@ const downwnloadRecordingFiles = async () => {
         index,
       };
 
-      const downloadAndSaveRecording = await downloadFile(details);
-      if (downloadAndSaveRecording.path) {
+      const saveFile = await downloadFile(details);
+      if (saveFile.status === 200 && saveFile.data) {
         console.log("\x1b[32m%s\x1b[0m", `Downloading Success`);
-        console.log(downloadAndSaveRecording.path);
+        // console.log(saveFile);
         data.index += 1;
         fs.writeFileSync("history.json", JSON.stringify(data));
       } else {
@@ -55,6 +51,8 @@ const downwnloadRecordingFiles = async () => {
 
       // ============= condition to stop loop =============
       if (index + 1 === dataLength) {
+        console.log("masuk condition end loop");
+
         // create files index at recording files
         fs.writeFileSync(
           "./recording/" + folderName + "/" + data.cursor + ".json",
@@ -140,19 +138,12 @@ const downloadFile = async (details) => {
       },
     });
     const saveFile = await downloadFile.data.pipe(
-      fs
-        .createWriteStream(
-          "./recording/" +
-            folderName +
-            "/" +
-            details.fileName[details.fileName.length - 1]
-        )
-        .on("finish", () => {
-          return true;
-        })
-        .on("error", () => {
-          return false;
-        })
+      fs.createWriteStream(
+        "./recording/" +
+          folderName +
+          "/" +
+          details.fileName[details.fileName.length - 1]
+      )
     );
     console.log(
       "\x1b[33m%s\x1b[0m",
@@ -165,38 +156,10 @@ const downloadFile = async (details) => {
       `Downloading ${details.fileName[details.fileName.length - 1]}`
     );
 
-    return saveFile;
+    return downloadFile;
   } catch (error) {
     console.log(error);
   }
-
-  // const downloadFile = await axios
-  //       .get(recordingDownloadUrl, {
-  //         responseType: "stream",
-  //         params: {
-  //           secret: Secret,
-  //         },
-  //       })
-  //       .then(async (response) => {
-  //         await response.data.pipe(
-  //           fs.createWriteStream(
-  //             "./recording/" + folderName + "/" + fileName[fileName.length - 1]
-  //           )
-  //         );
-  //         console.log(
-  //           "\x1b[33m%s\x1b[0m",
-  //           `${index + 1}/${dataLength} - From cursor [${data.cursor}]`
-  //         );
-  //         console.log(
-  //           "\x1b[32m%s\x1b[0m",
-  //           `Downloading ${fileName[fileName.length - 1]}`
-  //         );
-  //         data.index += 1;
-  //         fs.writeFileSync("history.json", JSON.stringify(data));
-  //       })
-  //       .catch((error) => {
-  //         console.log(error, "Error Axios");
-  //       });
 };
 
 downwnloadRecordingFiles();
