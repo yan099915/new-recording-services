@@ -8,6 +8,7 @@
 ###### Instruction
 
 - Change the setting on .env file
+- run command "npm run reset" to make sure you reset history files and start from beginning
 - run command "npm start" to start downloading recording files
 - run command "npm run reset" to reset history files
 - back to first step
